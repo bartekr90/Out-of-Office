@@ -14,4 +14,3 @@ public class Project : BaseEntity
     public required virtual ProjectType ProjectType { get; set; }
     public required virtual Employee ProjectManager { get; set; }
 }
-

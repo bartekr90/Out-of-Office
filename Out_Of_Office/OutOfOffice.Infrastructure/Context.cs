@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using OutOfOffice.Domain;
 using OutOfOffice.Domain.Model.Entities;
+using OutOfOffice.Domain.Rules;
 using OutOfOffice.Infrastructure.Configuration;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace OutOfOffice.Infrastructure;
 
@@ -64,31 +67,33 @@ public class Context : IdentityDbContext
             entity.HasQueryFilter(e => !e.Deleted);
         });
 
-        List<IdentityRole> roles = Enum.GetValues(typeof(Role))
-           .Cast<Role>()
-           .Distinct()
-           .Select(e => new IdentityRole
-           {
-               Id = e.ToString(),
-               Name = e.ToString(),
-               NormalizedName = e.ToString().ToUpper()
-           })
-           .ToList();
-
-        if (roles.GroupBy(r => r.Id).Any(g => g.Count() > 1))
-        {
-            //TODO
-            //Console.WriteLine($"Error seeding roles: {ex.Message}");
-            throw new InvalidOperationException("Duplicate roles detected in the Role enum.");
-        }
-
         try
         {
+            List<IdentityRole> roles = Enum.GetValues(typeof(Role))
+                .Cast<Role>()
+                .Distinct()
+                .Select(role => new IdentityRole
+                {
+                    Id = role.ToString(),
+                    Name = role.ToString(),
+                    NormalizedName = role.ToString().ToUpperInvariant() // Using ToUpperInvariant for normalization
+                })
+                .ToList();
+
+            if (roles.GroupBy(r => r.Id).Any(g => g.Count() > 1))
+            {
+                throw new InvalidOperationException("Duplicate roles detected in the Role enum.");
+            }
+
             modelBuilder.Entity<IdentityRole>().HasData(roles);
         }
         catch (Exception ex)
         {
-            // Log the error (replace with your logging mechanism)
+            //TODO
+            // Proper logging
+            // e.g., _logger.LogError(ex, "Error seeding roles");
+            //Console.WriteLine($"Error seeding roles: {ex.Message}");
+                       
             throw;
         }
     }

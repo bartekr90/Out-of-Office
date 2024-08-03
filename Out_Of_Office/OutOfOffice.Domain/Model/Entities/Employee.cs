@@ -3,8 +3,7 @@
 namespace OutOfOffice.Domain.Model.Entities;
 
 public class Employee : BaseEntity
-{
-   
+{   
     public required string FullName { get; set; }       
     public bool Status { get; set; }
     public int SubdivisionId { get; set; }
